@@ -1707,74 +1707,59 @@ Lets take an example of text editor which keeps saving the state from time to ti
 
 First of all we have our memento object that will be able to hold the editor state
 
-```php
-class EditorMemento
-{
-    protected $content;
-
-    public function __construct(string $content)
-    {
-        $this->content = $content;
-    }
-
-    public function getContent()
-    {
-        return $this->content;
-    }
+```java
+class EditorMomento{
+	
+	String content;
+	EditorMomento(String content){
+		this.content = content;
+		
+	}
+	String getContent() {
+		return this.content;
+	}
 }
+
 ```
 
 Then we have our editor i.e. originator that is going to use memento object
 
-```php
-class Editor
-{
-    protected $content = '';
+```java
 
-    public function type(string $words)
-    {
-        $this->content = $this->content . ' ' . $words;
-    }
-
-    public function getContent()
-    {
-        return $this->content;
-    }
-
-    public function save()
-    {
-        return new EditorMemento($this->content);
-    }
-
-    public function restore(EditorMemento $memento)
-    {
-        $this->content = $memento->getContent();
-    }
+class Editor{
+	
+	String content = "";
+	void type(String words) {
+		this.content = this.content+words;
+	}
+	String getContent() {
+		return this.content;
+	}
+	EditorMomento save() {
+		return new EditorMomento(this.content);
+	}
+	void restore(EditorMomento momento) {
+		this.content = momento.getContent();
+	}
 }
+
 ```
 
 And then it can be used as
 
-```php
-$editor = new Editor();
-
-// Type some stuff
-$editor->type('This is the first sentence.');
-$editor->type('This is second.');
-
-// Save the state to restore to : This is the first sentence. This is second.
-$saved = $editor->save();
-
-// Type some more
-$editor->type('And this is third.');
-
-// Output: Content before Saving
-echo $editor->getContent(); // This is the first sentence. This is second. And this is third.
-
-// Restoring to last saved state
-$editor->restore($saved);
-
-$editor->getContent(); // This is the first sentence. This is second.
+```java
+public static void main(String[] args) {
+		Editor notepad = new Editor();
+		notepad.type("first ");
+		notepad.type(" second ");
+		
+		EditorMomento momento = notepad.save();
+		notepad.type("third");
+		System.out.println(notepad.getContent());
+		notepad.restore(momento);
+		System.out.println(notepad.getContent());
+		
+	}
 ```
 
 😎 Observer
@@ -1791,79 +1776,99 @@ Wikipedia says
 **Programmatic example**
 
 Translating our example from above. First of all we have job seekers that need to be notified for a job posting
-```php
-class JobPost
-{
-    protected $title;
+```java
 
-    public function __construct(string $title)
-    {
-        $this->title = $title;
-    }
-
-    public function getTitle()
-    {
-        return $this->title;
-    }
+interface Subject{
+	
+	void register(Observer O);
+	void unRegister(Observer O);
+	void notifyAllObserver();
 }
 
-class JobSeeker implements Observer
-{
-    protected $name;
-
-    public function __construct(string $name)
-    {
-        $this->name = $name;
-    }
-
-    public function onJobPosted(JobPost $job)
-    {
-        // Do something with the job posting
-        echo 'Hi ' . $this->name . '! New job posted: '. $job->getTitle();
-    }
+interface Observer{
+	void update(Subject s);
+	
 }
-```
-Then we have our job postings to which the job seekers will subscribe
-```php
-class EmploymentAgency implements Observable
-{
-    protected $observers = [];
 
-    protected function notify(JobPost $jobPosting)
-    {
-        foreach ($this->observers as $observer) {
-            $observer->onJobPosted($jobPosting);
-        }
-    }
+class Portal implements Subject{
+     ArrayList<Observer> userList;
+     ArrayList<String> jobs;
+     
+     Portal(){
+    	 userList = new ArrayList();
+ 		jobs = new ArrayList();
+     }
+	@Override
+	public void register(Observer O) {
+		// TODO Auto-generated method stub
+		userList.add(O);
+		
+	}
 
-    public function attach(Observer $observer)
-    {
-        $this->observers[] = $observer;
-    }
+	@Override
+	public void unRegister(Observer O) {
+		// TODO Auto-generated method stub
+		userList.remove(0);
+		
+		
+	}
 
-    public function addJob(JobPost $jobPosting)
-    {
-        $this->notify($jobPosting);
-    }
+	@Override
+	public void notifyAllObserver() {
+		// TODO Auto-generated method stub
+		for(Observer o : userList) {
+			o.update(this);
+		}
+		
+	}
+	
+	void addJob(String job) {
+		this.jobs.add(job);
+		notifyAllObserver();
+		
+	}
+	ArrayList<String> getJobs(){
+		return jobs;
+		
+	}
+	public String toString() {
+		return jobs.toString();
+	}
+	
 }
+
+class JobSeeker implements Observer{
+    String name;
+    JobSeeker(String name){
+    	this.name = name;
+    }
+	@Override
+	public void update(Subject s) {
+		// TODO Auto-generated method stub
+		System.out.println("new Job posted ->"+ s);
+		
+	}
+	
+
 ```
 Then it can be used as
-```php
-// Create subscribers
-$johnDoe = new JobSeeker('John Doe');
-$janeDoe = new JobSeeker('Jane Doe');
+```java
+public static void main(String[] args) {
+		// TODO Auto-generated method stub
+		Portal instaHyre = new Portal();
+		instaHyre.register(new JobSeeker("Ujjwal"));
+		instaHyre.register(new JobSeeker("Vivek"));
+		instaHyre.addJob("Epam Junior Software Engineer");
+		instaHyre.addJob("Epam Cloud Developer");
 
-// Create publisher and attach subscribers
-$jobPostings = new EmploymentAgency();
-$jobPostings->attach($johnDoe);
-$jobPostings->attach($janeDoe);
-
-// Add a new job and see if subscribers get notified
-$jobPostings->addJob(new JobPost('Software Engineer'));
-
-// Output
-// Hi John Doe! New job posted: Software Engineer
-// Hi Jane Doe! New job posted: Software Engineer
+	}
+    /*
+    output
+    new Job posted ->[Epam Junior Software Engineer]
+    new Job posted ->[Epam Junior Software Engineer]
+    new Job posted ->[Epam Junior Software Engineer, Epam Cloud Developer]
+    new Job posted ->[Epam Junior Software Engineer, Epam Cloud Developer]
+    */
 ```
 
 🏃 Visitor
@@ -1881,128 +1886,148 @@ Wikipedia says
 
 Let's take an example of a zoo simulation where we have several different kinds of animals and we have to make them Sound. Let's translate this using visitor pattern
 
-```php
-// Visitee
-interface Animal
-{
-    public function accept(AnimalOperation $operation);
+```java
+
+interface Animal{
+	
+	void action(AnimalCage action);
 }
 
-// Visitor
-interface AnimalOperation
-{
-    public function visitMonkey(Monkey $monkey);
-    public function visitLion(Lion $lion);
-    public function visitDolphin(Dolphin $dolphin);
+interface AnimalCage{
+	
+	void monkeyCage(Monkey monkey);
+	void lionCage(Lion lion);
+	void deerCage(Deer deer);
 }
 ```
 Then we have our implementations for the animals
-```php
-class Monkey implements Animal
-{
-    public function shout()
-    {
-        echo 'Ooh oo aa aa!';
-    }
+```java
+class Monkey implements Animal{
+	void shout() {
+		System.out.println("Oooh oo aaa aaa");
+	}
 
-    public function accept(AnimalOperation $operation)
-    {
-        $operation->visitMonkey($this);
-    }
+	@Override
+	public void action(AnimalCage action) {
+		// TODO Auto-generated method stub
+		action.monkeyCage(this);
+		
+	}
+	
 }
 
-class Lion implements Animal
-{
-    public function roar()
-    {
-        echo 'Roaaar!';
-    }
+class Lion implements Animal{
+	void roar() {
+		System.out.println("Rooarrr");
+	}
 
-    public function accept(AnimalOperation $operation)
-    {
-        $operation->visitLion($this);
-    }
+	@Override
+	public void action(AnimalCage action) {
+		// TODO Auto-generated method stub
+		action.lionCage(this);
+	}
+	
+	
 }
+class Deer implements Animal{
+	void grunt() {
+		System.out.println("grunt");
+	}
 
-class Dolphin implements Animal
-{
-    public function speak()
-    {
-        echo 'Tuut tuttu tuutt!';
-    }
-
-    public function accept(AnimalOperation $operation)
-    {
-        $operation->visitDolphin($this);
-    }
+	@Override
+	public void action(AnimalCage action) {
+		// TODO Auto-generated method stub
+		action.deerCage(this);
+		
+	}
+	
 }
 ```
 Let's implement our visitor
-```php
-class Speak implements AnimalOperation
-{
-    public function visitMonkey(Monkey $monkey)
-    {
-        $monkey->shout();
-    }
+```java
+class Speak implements AnimalCage{
 
-    public function visitLion(Lion $lion)
-    {
-        $lion->roar();
-    }
+	@Override
+	public void monkeyCage(Monkey monkey) {
+		// TODO Auto-generated method stub
+		monkey.shout();
+	}
 
-    public function visitDolphin(Dolphin $dolphin)
-    {
-        $dolphin->speak();
-    }
+	@Override
+	public void lionCage(Lion lion) {
+		// TODO Auto-generated method stub
+		lion.roar();
+		
+	}
+
+	@Override
+	public void deerCage(Deer deer) {
+		// TODO Auto-generated method stub
+		deer.grunt();
+		
+	}
+	
 }
+
 ```
 
 And then it can be used as
-```php
-$monkey = new Monkey();
-$lion = new Lion();
-$dolphin = new Dolphin();
-
-$speak = new Speak();
-
-$monkey->accept($speak);    // Ooh oo aa aa!    
-$lion->accept($speak);      // Roaaar!
-$dolphin->accept($speak);   // Tuut tutt tuutt!
+```java
+Animal monkey = new Monkey();
+	   Animal lion = new Lion();
+	   Animal deer = new Deer();
+	   
+	   Speak speak = new Speak();
+	   
+	   monkey.action(speak);
+	   lion.action(speak);
+	   deer.action(speak);
+       /*output
+        Oooh oo aaa aaa
+        Rooarrr
+        grunt
+       */
 ```
 We could have done this simply by having an inheritance hierarchy for the animals but then we would have to modify the animals whenever we would have to add new actions to animals. But now we will not have to change them. For example, let's say we are asked to add the jump behavior to the animals, we can simply add that by creating a new visitor i.e.
 
-```php
-class Jump implements AnimalOperation
-{
-    public function visitMonkey(Monkey $monkey)
-    {
-        echo 'Jumped 20 feet high! on to the tree!';
-    }
+```java
+class Jump implements AnimalCage{
 
-    public function visitLion(Lion $lion)
-    {
-        echo 'Jumped 7 feet! Back on the ground!';
-    }
+	@Override
+	public void monkeyCage(Monkey monkey) {
+		// TODO Auto-generated method stub
+		System.out.println("Jumped  20 ft");
+	}
 
-    public function visitDolphin(Dolphin $dolphin)
-    {
-        echo 'Walked on water a little and disappeared';
-    }
+	@Override
+	public void lionCage(Lion lion) {
+		// TODO Auto-generated method stub
+		System.out.println("Jumped  7 ft");
+		
+	}
+
+	@Override
+	public void deerCage(Deer deer) {
+		// TODO Auto-generated method stub
+	System.out.println("Jumped  2 ft");
+		
+	}
+	
 }
+
 ```
 And for the usage
-```php
-$jump = new Jump();
-
-$monkey->accept($speak);   // Ooh oo aa aa!
-$monkey->accept($jump);    // Jumped 20 feet high! on to the tree!
-
-$lion->accept($speak);     // Roaaar!
-$lion->accept($jump);      // Jumped 7 feet! Back on the ground!
-
-$dolphin->accept($speak);  // Tuut tutt tuutt!
-$dolphin->accept($jump);   // Walked on water a little and disappeared
+```java
+       Jump jump = new Jump();
+	   monkey.action(jump);
+	   lion.action(jump);
+	   deer.action(jump);
+       /*
+       OUTPUT
+       Jumped  20 ft
+       Jumped  7 ft
+       Jumped  2 ft
+       */
 ```
 
 💡 Strategy
@@ -2021,61 +2046,59 @@ Wikipedia says
 
 Translating our example from above. First of all we have our strategy interface and different strategy implementations
 
-```php
-interface SortStrategy
-{
-    public function sort(array $dataset): array;
+```java
+interface SortingStrategy{
+	int[] sort(int[] arr);
 }
 
-class BubbleSortStrategy implements SortStrategy
-{
-    public function sort(array $dataset): array
-    {
-        echo "Sorting using bubble sort";
+class BubbleStrategy implements SortingStrategy{
 
-        // Do sorting
-        return $dataset;
-    }
+	@Override
+	public int[] sort(int[] arr) {
+		// TODO Auto-generated method stub
+		 System.out.println( "Sorting using buble sort");
+		 Arrays.sort(arr);
+		return arr;
+	}
+	
+}
+class   QuickStrategy implements SortingStrategy{
+
+	@Override
+	public int[] sort(int[] arr) {
+		// TODO Auto-generated method stub
+		 System.out.println( "Sorting using Quick sort");
+		 Arrays.sort(arr);
+		return arr;
+	}
+	
 }
 
-class QuickSortStrategy implements SortStrategy
-{
-    public function sort(array $dataset): array
-    {
-        echo "Sorting using quick sort";
-
-        // Do sorting
-        return $dataset;
-    }
-}
 ```
 
 And then we have our client that is going to use any strategy
-```php
-class Sorter
-{
-    protected $sorter;
-
-    public function __construct(SortStrategy $sorter)
-    {
-        $this->sorter = $sorter;
-    }
-
-    public function sort(array $dataset): array
-    {
-        return $this->sorter->sort($dataset);
-    }
+```java
+class Sorter{
+	SortingStrategy sorter ;
+	Sorter(SortingStrategy sorter){
+		this.sorter = sorter;
+		
+	}
+	
+	int[] sort(int[] arr) {
+		return this.sorter.sort(arr);
+	}
 }
 ```
 And it can be used as
-```php
-$dataset = [1, 5, 4, 3, 2, 8];
-
-$sorter = new Sorter(new BubbleSortStrategy());
-$sorter->sort($dataset); // Output : Sorting using bubble sort
-
-$sorter = new Sorter(new QuickSortStrategy());
-$sorter->sort($dataset); // Output : Sorting using quick sort
+```java
+public static void main(String[] args) {
+		int[] arr = {2,4,2,1,5,6};
+		Sorter sorter = new Sorter(new BubbleStrategy());
+		sorter.sort(arr);
+		Sorter sorter1 = new Sorter(new QuickStrategy());
+		sorter1.sort(arr);		
+	}
 ```
 
 💢 State
