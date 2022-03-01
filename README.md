@@ -1628,58 +1628,64 @@ Here is the simplest example of a chat room (i.e. mediator) with users (i.e. col
 
 First of all, we have the mediator i.e. the chat room
 
-```php
-interface ChatRoomMediator 
-{
-    public function showMessage(User $user, string $message);
+```java
+interface ChatRoomMediator{
+	
+	void ShowMsg(User user, String msg);
 }
 
-// Mediator
-class ChatRoom implements ChatRoomMediator
-{
-    public function showMessage(User $user, string $message)
-    {
-        $time = date('M d, y H:i');
-        $sender = $user->getName();
 
-        echo $time . '[' . $sender . ']:' . $message;
-    }
+// Mediator
+class ChatRoom implements ChatRoomMediator{
+
+	@Override
+	public void ShowMsg(User user, String msg) {
+		// TODO Auto-generated method stub
+		String sender = user.getName();
+		System.out.println(sender+"-->"+ msg);
+	}
+	
 }
 ```
 
 Then we have our users i.e. colleagues
-```php
-class User {
-    protected $name;
-    protected $chatMediator;
-
-    public function __construct(string $name, ChatRoomMediator $chatMediator) {
-        $this->name = $name;
-        $this->chatMediator = $chatMediator;
-    }
-
-    public function getName() {
-        return $this->name;
-    }
-
-    public function send($message) {
-        $this->chatMediator->showMessage($this, $message);
-    }
+```java
+class User{
+	
+	String name;
+	ChatRoomMediator mediator;
+	User(String name, ChatRoomMediator mediator){
+		this.mediator = mediator;
+		this.name = name;
+	}
+	
+	String getName() {
+		return this.name;
+	}
+	
+	void send(String message) {
+		this.mediator.ShowMsg(this, message);
+	}
 }
 ```
 And the usage
-```php
-$mediator = new ChatRoom();
+```java
+public static void main(String[] args) {
+		ChatRoomMediator room = new ChatRoom();	
+		
+		User john = new User("ujjwal", room);
+		User jane = new User("Jane", room);
 
-$john = new User('John Doe', $mediator);
-$jane = new User('Jane Doe', $mediator);
-
-$john->send('Hi there!');
-$jane->send('Hey!');
+		john.send("Hello");
+		jane.send("hey");
+		
+	}
 
 // Output will be
-// Feb 14, 10:58 [John]: Hi there!
-// Feb 14, 10:58 [Jane]: Hey!
+// ujjwal-->Hello
+// Jane-->hey
+
+
 ```
 
 💾 Memento
